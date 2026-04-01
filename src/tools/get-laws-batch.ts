@@ -3,6 +3,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { resolveLawId } from "../lib/law-resolver.js";
 import { getLawData } from "../lib/egov-client.js";
 import { parseArticle, parseArticleStructured } from "../lib/egov-parser.js";
+import { sanitizeErrorMessage } from "../lib/error-sanitizer.js";
+import { withAuditLog } from "../lib/audit-logger.js";
 import { formatArticleRef } from "../lib/errors.js";
 import type {
   BatchFetchItem,
@@ -35,7 +37,7 @@ export function registerGetLawsBatchTool(server: McpServer): void {
     "get_laws_batch",
     "複数の法令・条文を一括取得する。同一法令の複数条文はAPI呼び出し1回で効率的に処理。最大20件。",
     schema,
-    async ({ requests }) => {
+    withAuditLog("get_laws_batch", async ({ requests }) => {
       try {
         if (requests.length > MAX_REQUESTS) {
           return {
@@ -165,8 +167,7 @@ export function registerGetLawsBatchTool(server: McpServer): void {
               law_name: resolvedInfo.title,
               article_number: req.article_number,
               status: "error",
-              error_message:
-                error instanceof Error ? error.message : String(error),
+              error_message: sanitizeErrorMessage(error),
             });
           }
         }
@@ -191,12 +192,16 @@ export function registerGetLawsBatchTool(server: McpServer): void {
           ],
         };
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text" as const, text: `エラー: ${message}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `エラー: ${sanitizeErrorMessage(error)}`,
+            },
+          ],
           isError: true,
         };
       }
-    },
+    }),
   );
 }

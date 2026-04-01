@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { LawRegistry } from "../lib/law-registry.js";
 import { resolveLawId } from "../lib/law-resolver.js";
+import { sanitizeErrorMessage } from "../lib/error-sanitizer.js";
+import { withAuditLog } from "../lib/audit-logger.js";
 import {
   checkLawUpdate,
   checkLawUpdates,
@@ -115,63 +117,72 @@ export function registerCheckLawUpdatesTool(server: McpServer): void {
     "check_law_updates",
     "法令の改正状況をe-Gov APIで確認する。法令名指定で単体チェック、グループ指定でバッチチェック、show_historyで改正履歴表示が可能。",
     schema,
-    async ({ law_name, group, show_history }) => {
-      try {
-        // Single law check with optional history
-        if (law_name) {
-          const resolved = await resolveLawId(law_name);
-          if (!resolved) {
-            return {
-              content: [
-                {
-                  type: "text" as const,
-                  text: `法令「${law_name}」が見つかりませんでした。`,
-                },
-              ],
-            };
+    withAuditLog(
+      "check_law_updates",
+      async ({ law_name, group, show_history }) => {
+        try {
+          // Single law check with optional history
+          if (law_name) {
+            const resolved = await resolveLawId(law_name);
+            if (!resolved) {
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `法令「${law_name}」が見つかりませんでした。`,
+                  },
+                ],
+              };
+            }
+
+            const result = show_history
+              ? await getLawRevisionHistory(resolved)
+              : await checkLawUpdate(resolved);
+
+            const text = show_history
+              ? formatHistory(result)
+              : formatSummary([result]);
+
+            return { content: [{ type: "text" as const, text }] };
           }
 
-          const result = show_history
-            ? await getLawRevisionHistory(resolved)
-            : await checkLawUpdate(resolved);
+          // Batch check (group or all)
+          const aliases = group
+            ? registry.getByGroup(group)
+            : registry.getAll();
 
-          const text = show_history
-            ? formatHistory(result)
-            : formatSummary([result]);
+          if (aliases.length === 0) {
+            const msg = group
+              ? `グループ「${group}」に該当する法令が見つかりませんでした。`
+              : "登録済み法令がありません。";
+            return { content: [{ type: "text" as const, text: msg }] };
+          }
+
+          // Resolve each alias to get law_id
+          const resolvedLaws = [];
+          for (const alias of aliases) {
+            const resolved = await resolveLawId(alias.title);
+            if (resolved) {
+              resolvedLaws.push(resolved);
+            }
+          }
+
+          const results = await checkLawUpdates(resolvedLaws);
+          const text = formatSummary(results);
 
           return { content: [{ type: "text" as const, text }] };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `エラー: ${sanitizeErrorMessage(error)}`,
+              },
+            ],
+            isError: true,
+          };
         }
-
-        // Batch check (group or all)
-        const aliases = group ? registry.getByGroup(group) : registry.getAll();
-
-        if (aliases.length === 0) {
-          const msg = group
-            ? `グループ「${group}」に該当する法令が見つかりませんでした。`
-            : "登録済み法令がありません。";
-          return { content: [{ type: "text" as const, text: msg }] };
-        }
-
-        // Resolve each alias to get law_id
-        const resolvedLaws = [];
-        for (const alias of aliases) {
-          const resolved = await resolveLawId(alias.title);
-          if (resolved) {
-            resolvedLaws.push(resolved);
-          }
-        }
-
-        const results = await checkLawUpdates(resolvedLaws);
-        const text = formatSummary(results);
-
-        return { content: [{ type: "text" as const, text }] };
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return {
-          content: [{ type: "text" as const, text: `エラー: ${message}` }],
-          isError: true,
-        };
-      }
-    },
+      },
+    ),
   );
 }

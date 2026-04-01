@@ -1,4 +1,5 @@
 import { createCache } from "./cache.js";
+import { logSsrfRejection } from "./audit-logger.js";
 
 // Polyfill DOMMatrix for serverless environments (Vercel Node 20/22).
 // pdfjs-dist uses DOMMatrix for text position calculations during extraction.
@@ -106,9 +107,9 @@ function normalizeText(raw: string): string {
  */
 export async function extractTextFromPdf(pdfUrl: string): Promise<string> {
   if (!isAllowedPdfUrl(pdfUrl)) {
-    throw new Error(
-      `PDF URL is not in the allowed domain list: ${new URL(pdfUrl).hostname}`,
-    );
+    const hostname = new URL(pdfUrl).hostname;
+    logSsrfRejection(pdfUrl, hostname);
+    throw new Error(`PDF URL is not in the allowed domain list: ${hostname}`);
   }
 
   const cacheKey = `pdf:${pdfUrl}`;

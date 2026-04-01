@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { verifyCitation } from "../lib/citation-verifier.js";
 import { formatArticleRef } from "../lib/errors.js";
+import { sanitizeErrorMessage } from "../lib/error-sanitizer.js";
+import { withAuditLog } from "../lib/audit-logger.js";
 import type { CitationVerification } from "../lib/types.js";
 
 const MAX_CITATIONS = 10;
@@ -80,7 +82,7 @@ export function registerVerifyCitationTool(server: McpServer): void {
     "verify_citation",
     "AIの回答に含まれる法令引用を検証する。条文の存在確認、テキスト照合による正確性チェックが可能。最大10件。",
     schema,
-    async ({ citations }) => {
+    withAuditLog("verify_citation", async ({ citations }) => {
       try {
         if (citations.length === 0) {
           return {
@@ -120,12 +122,16 @@ export function registerVerifyCitationTool(server: McpServer): void {
         const text = formatResults(results);
         return { content: [{ type: "text" as const, text }] };
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text" as const, text: `エラー: ${message}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `エラー: ${sanitizeErrorMessage(error)}`,
+            },
+          ],
           isError: true,
         };
       }
-    },
+    }),
   );
 }

@@ -132,6 +132,7 @@ describe("LawRegistry", () => {
         "住宅品質・瑕疵",
         "賃貸管理",
         "コンプライアンス",
+        "税法",
       ];
       for (const group of expectedGroups) {
         const results = registry.getByGroup(group);
@@ -151,6 +152,20 @@ describe("LawRegistry", () => {
       expect(registry.findByName("犯収法")).toBeDefined();
       expect(registry.findByName("景品表示法")).toBeDefined();
       expect(registry.findByName("盛土規制法")).toBeDefined();
+    });
+
+    it("finds tax law aliases by abbreviation", () => {
+      expect(registry.findByName("所得税法")).toBeDefined();
+      expect(registry.findByName("租特法")).toBeDefined();
+      expect(registry.findByName("地方税法")).toBeDefined();
+      expect(registry.findByName("印紙税法")).toBeDefined();
+      expect(registry.findByName("登免税法")).toBeDefined();
+      expect(registry.findByName("相続税法")).toBeDefined();
+    });
+
+    it("税法 group contains 6 laws", () => {
+      const results = registry.getByGroup("税法");
+      expect(results).toHaveLength(6);
     });
   });
 });

@@ -3,6 +3,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findBestMatch } from "../lib/best-match.js";
 import { TsutatsuRegistry } from "../lib/tsutatsu-registry.js";
 import { extractTextFromPdf } from "../lib/pdf-extractor.js";
+import { sanitizeErrorMessage } from "../lib/error-sanitizer.js";
+import { withAuditLog } from "../lib/audit-logger.js";
 import { searchLaws, getLawData } from "../lib/egov-client.js";
 import { parseFullLaw } from "../lib/egov-parser.js";
 
@@ -71,7 +73,7 @@ export function registerGetTsutatsuTool(server: McpServer): void {
     "get_tsutatsu",
     "不動産取引に関する国交省の通達・ガイドライン・告示を取得する。PDFから内容を抽出し、見つからない場合はe-Gov APIで検索を試みる。",
     schema,
-    async ({ tsutatsu_name }) => {
+    withAuditLog("get_tsutatsu", async ({ tsutatsu_name }) => {
       try {
         // Step 1: Check preset registry for known tsutatsu
         const preset = registry.findByName(tsutatsu_name);
@@ -179,12 +181,16 @@ export function registerGetTsutatsuTool(server: McpServer): void {
 
         return { content: [{ type: "text" as const, text }] };
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text" as const, text: `エラー: ${message}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `エラー: ${sanitizeErrorMessage(error)}`,
+            },
+          ],
           isError: true,
         };
       }
-    },
+    }),
   );
 }

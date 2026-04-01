@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findRelatedLaws } from "../lib/related-law-finder.js";
 import { formatArticleRef } from "../lib/errors.js";
+import { sanitizeErrorMessage } from "../lib/error-sanitizer.js";
+import { withAuditLog } from "../lib/audit-logger.js";
 import type { RelatedLawSuggestion } from "../lib/types.js";
 
 const schema = {
@@ -65,18 +67,22 @@ export function registerSuggestRelatedTool(server: McpServer): void {
     "suggest_related",
     "指定した条文が参照している関連法令・委任先・同法令内参照を自動抽出して提案する。",
     schema,
-    async ({ law_name, article_number }) => {
+    withAuditLog("suggest_related", async ({ law_name, article_number }) => {
       try {
         const result = await findRelatedLaws(law_name, article_number);
         const text = formatSuggestion(result);
         return { content: [{ type: "text" as const, text }] };
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text" as const, text: `エラー: ${message}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `エラー: ${sanitizeErrorMessage(error)}`,
+            },
+          ],
           isError: true,
         };
       }
-    },
+    }),
   );
 }

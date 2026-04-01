@@ -5,9 +5,9 @@ describe("TsutatsuRegistry", () => {
   const registry = new TsutatsuRegistry();
 
   describe("getAll", () => {
-    it("returns 5 tsutatsu presets", () => {
+    it("returns 10 tsutatsu presets", () => {
       const all = registry.getAll();
-      expect(all).toHaveLength(5);
+      expect(all).toHaveLength(10);
     });
 
     it("returns a defensive copy (different reference each call)", () => {
@@ -112,6 +112,68 @@ describe("TsutatsuRegistry", () => {
       const result = registry.findByName("重説様式");
       expect(result).toBeDefined();
       expect(result!.title).toContain("重要事項説明書");
+    });
+
+    it("finds 人の死の告知GL by abbreviation", () => {
+      const result = registry.findByName("人の死の告知GL");
+      expect(result).toBeDefined();
+      expect(result!.id).toBe("hito-no-shi");
+    });
+
+    it("finds 事故物件ガイドライン by abbreviation", () => {
+      const result = registry.findByName("事故物件ガイドライン");
+      expect(result).toBeDefined();
+      expect(result!.title).toContain("人の死の告知");
+    });
+
+    it("finds サブリースGL by abbreviation", () => {
+      const result = registry.findByName("サブリースGL");
+      expect(result).toBeDefined();
+      expect(result!.id).toBe("sublease-gl");
+    });
+
+    it("finds 賃管法解釈・運用 by abbreviation", () => {
+      const result = registry.findByName("賃管法解釈・運用");
+      expect(result).toBeDefined();
+      expect(result!.id).toBe("chintai-kanri-kaishaku");
+    });
+
+    it("finds IT重説マニュアル by abbreviation", () => {
+      const result = registry.findByName("IT重説マニュアル");
+      expect(result).toBeDefined();
+      expect(result!.id).toBe("it-jusetsu");
+    });
+
+    it("finds インスペクションGL by abbreviation", () => {
+      const result = registry.findByName("インスペクションGL");
+      expect(result).toBeDefined();
+      expect(result!.id).toBe("inspection-gl");
+    });
+  });
+
+  describe("search (new presets)", () => {
+    it("finds presets by keyword サブリース", () => {
+      const results = registry.search("サブリース");
+      expect(results.length).toBeGreaterThanOrEqual(1);
+      expect(results.some((p) => p.id === "sublease-gl")).toBe(true);
+    });
+
+    it("finds presets by keyword インスペクション", () => {
+      const results = registry.search("インスペクション");
+      expect(results.length).toBeGreaterThanOrEqual(1);
+      expect(results.some((p) => p.id === "inspection-gl")).toBe(true);
+    });
+
+    it("finds presets by keyword 賃貸", () => {
+      const results = registry.search("賃貸");
+      expect(results.length).toBeGreaterThanOrEqual(1);
+      expect(results.some((p) => p.id === "chintai-kanri-kaishaku")).toBe(true);
+    });
+
+    it("finds presets by keyword IT重説", () => {
+      const results = registry.search("IT重説");
+      expect(results.length).toBeGreaterThanOrEqual(1);
+      expect(results.some((p) => p.id === "it-jusetsu")).toBe(true);
     });
   });
 });

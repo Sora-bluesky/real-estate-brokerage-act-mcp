@@ -392,4 +392,36 @@ export const ALL_LAW_ALIASES: LawAlias[] = [
     abbrev: ["景品表示法", "景表法"],
     group: "コンプライアンス",
   },
+
+  // ── Tax laws (不動産取引関連税法) ──
+  {
+    title: "所得税法",
+    abbrev: ["所得税法"],
+    group: "税法",
+  },
+  {
+    title: "租税特別措置法",
+    abbrev: ["租特法", "措置法"],
+    group: "税法",
+  },
+  {
+    title: "地方税法",
+    abbrev: ["地方税法"],
+    group: "税法",
+  },
+  {
+    title: "印紙税法",
+    abbrev: ["印紙税法"],
+    group: "税法",
+  },
+  {
+    title: "登録免許税法",
+    abbrev: ["登免税法", "登録免許税法"],
+    group: "税法",
+  },
+  {
+    title: "相続税法",
+    abbrev: ["相続税法"],
+    group: "税法",
+  },
 ];
