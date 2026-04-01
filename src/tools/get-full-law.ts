@@ -3,6 +3,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { resolveLawId } from "../lib/law-resolver.js";
 import { getLawData } from "../lib/egov-client.js";
 import { parseFullLaw } from "../lib/egov-parser.js";
+import { sanitizeErrorMessage } from "../lib/error-sanitizer.js";
+import { withAuditLog } from "../lib/audit-logger.js";
 import { LawNotFoundError } from "../lib/errors.js";
 
 const schema = {
@@ -19,7 +21,7 @@ export function registerGetFullLawTool(server: McpServer): void {
     "get_full_law",
     "法令の全文を取得する。条番号を指定せず法令全体のテキストを返す。",
     schema,
-    async ({ law_name }) => {
+    withAuditLog("get_full_law", async ({ law_name }) => {
       try {
         const resolved = await resolveLawId(law_name);
         if (!resolved) {
@@ -46,12 +48,16 @@ export function registerGetFullLawTool(server: McpServer): void {
 
         return { content: [{ type: "text" as const, text }] };
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text" as const, text: `エラー: ${message}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `エラー: ${sanitizeErrorMessage(error)}`,
+            },
+          ],
           isError: true,
         };
       }
-    },
+    }),
   );
 }

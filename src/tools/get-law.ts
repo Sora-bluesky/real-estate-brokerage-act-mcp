@@ -3,6 +3,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { resolveLawId } from "../lib/law-resolver.js";
 import { getLawData } from "../lib/egov-client.js";
 import { parseArticle, parseArticleStructured } from "../lib/egov-parser.js";
+import { sanitizeErrorMessage } from "../lib/error-sanitizer.js";
+import { withAuditLog } from "../lib/audit-logger.js";
 import { LawNotFoundError, ArticleNotFoundError } from "../lib/errors.js";
 
 const schema = {
@@ -29,7 +31,7 @@ export function registerGetLawTool(server: McpServer): void {
     "get_law",
     "条番号を指定して法令の条文を取得する。附則・別表にも対応。略称・正式名称のいずれでも指定可能。format=structured で条→項→号の階層構造をJSON形式で取得可能。",
     schema,
-    async ({ law_name, article_number, format }) => {
+    withAuditLog("get_law", async ({ law_name, article_number, format }) => {
       try {
         const resolved = await resolveLawId(law_name);
         if (!resolved) {
@@ -110,12 +112,16 @@ export function registerGetLawTool(server: McpServer): void {
 
         return { content: [{ type: "text" as const, text }] };
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text" as const, text: `エラー: ${message}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `エラー: ${sanitizeErrorMessage(error)}`,
+            },
+          ],
           isError: true,
         };
       }
-    },
+    }),
   );
 }

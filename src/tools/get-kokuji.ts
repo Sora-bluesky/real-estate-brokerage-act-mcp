@@ -3,6 +3,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { findBestMatch } from "../lib/best-match.js";
 import { KokujiRegistry } from "../lib/kokuji-registry.js";
 import { findKokujiPdfUrl } from "../lib/mlit-client.js";
+import { sanitizeErrorMessage } from "../lib/error-sanitizer.js";
+import { withAuditLog } from "../lib/audit-logger.js";
 import { extractTextFromPdf } from "../lib/pdf-extractor.js";
 import { searchLaws, getLawData } from "../lib/egov-client.js";
 import { parseFullLaw } from "../lib/egov-parser.js";
@@ -89,7 +91,7 @@ export function registerGetKokujiTool(server: McpServer): void {
     "get_kokuji",
     "建築基準法が技術基準を委任している告示の全文を取得する。国土交通省の告示データベース（PDF）から取得し、見つからない場合はe-Gov APIで検索を試みる。",
     schema,
-    async ({ kokuji_name }) => {
+    withAuditLog("get_kokuji", async ({ kokuji_name }) => {
       try {
         // Step 1: Check preset registry for known kokuji
         const preset = registry.findByName(kokuji_name);
@@ -235,12 +237,16 @@ export function registerGetKokujiTool(server: McpServer): void {
 
         return { content: [{ type: "text" as const, text }] };
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text" as const, text: `エラー: ${message}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `エラー: ${sanitizeErrorMessage(error)}`,
+            },
+          ],
           isError: true,
         };
       }
-    },
+    }),
   );
 }

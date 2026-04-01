@@ -60,6 +60,68 @@ const PRESETS: TsutatsuPreset[] = [
     pdf_url: "https://www.mlit.go.jp/totikensangyo/const/content/001895540.pdf",
     description: "重要事項説明書の標準的な様式例。令和8年4月1日以降版。",
   },
+  {
+    id: "hito-no-shi",
+    title: "宅地建物取引業者による人の死の告知に関するガイドライン",
+    abbrev: ["人の死の告知GL", "事故物件ガイドライン", "告知ガイドライン"],
+    issuer: "国土交通省",
+    year: 2021,
+    pdf_url:
+      "https://www.mlit.go.jp/tochi_fudousan_kensetsugyo/const/content/001727517.pdf",
+    description:
+      "不動産取引における人の死の告知に関する判断基準。自然死・日常生活の事故死は原則告知不要、賃貸は概ね3年経過で告知不要等を規定。令和3年10月策定。",
+  },
+  {
+    id: "sublease-gl",
+    title: "サブリース事業に係る適正な業務のためのガイドライン",
+    abbrev: [
+      "サブリースGL",
+      "サブリースガイドライン",
+      "サブリース事業適正化GL",
+    ],
+    issuer: "国土交通省",
+    year: 2023,
+    pdf_url:
+      "https://www.mlit.go.jp/tochi_fudousan_kensetsugyo/const/content/001474901.pdf",
+    description:
+      "賃貸住宅管理業法に基づくサブリース業者の勧誘・契約締結の適正化に関するガイドライン。令和5年3月31日改正。",
+  },
+  {
+    id: "chintai-kanri-kaishaku",
+    title: "賃貸住宅の管理業務等の適正化に関する法律の解釈・運用の考え方",
+    abbrev: ["賃管法解釈・運用", "賃貸管理業法通達", "賃管法通達"],
+    issuer: "国土交通省",
+    year: 2023,
+    pdf_url:
+      "https://www.mlit.go.jp/tochi_fudousan_kensetsugyo/const/content/001474894.pdf",
+    description:
+      "賃貸住宅管理業法の各条文について具体的な解釈と運用方針を示した通達。令和5年3月31日施行版。",
+  },
+  {
+    id: "it-jusetsu",
+    title:
+      "重要事項説明書等の電磁的方法による提供及びITを活用した重要事項説明実施マニュアル",
+    abbrev: ["IT重説マニュアル", "IT重説", "電子書面マニュアル"],
+    issuer: "国土交通省",
+    year: 2024,
+    pdf_url: "https://www.mlit.go.jp/totikensangyo/const/content/001853617.pdf",
+    description:
+      "ITを活用した重要事項説明（IT重説）と書面の電子化に関する実施マニュアル。令和6年12月改訂版。",
+  },
+  {
+    id: "inspection-gl",
+    title: "既存住宅インスペクション・ガイドライン",
+    abbrev: [
+      "インスペクションGL",
+      "既存住宅インスペクション",
+      "住宅インスペクションガイドライン",
+    ],
+    issuer: "国土交通省",
+    year: 2013,
+    pdf_url: "https://www.mlit.go.jp/common/001001034.pdf",
+    description:
+      "既存住宅売買時の目視等を中心とする基礎的なインスペクションの検査方法・留意事項を定めたガイドライン。平成25年6月策定。",
+  },
 ];
 
 /**

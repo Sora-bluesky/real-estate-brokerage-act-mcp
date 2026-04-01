@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { LawRegistry } from "../lib/law-registry.js";
 import { searchLaws } from "../lib/egov-client.js";
+import { sanitizeErrorMessage } from "../lib/error-sanitizer.js";
+import { withAuditLog } from "../lib/audit-logger.js";
 
 const registry = new LawRegistry();
 
@@ -17,7 +19,7 @@ export function registerSearchLawTool(server: McpServer): void {
     "search_law",
     "キーワードで建築関連法令を横断検索する。登録済みエイリアスとe-Gov APIの両方を検索する。",
     schema,
-    async ({ keyword }) => {
+    withAuditLog("search_law", async ({ keyword }) => {
       try {
         // Search aliases first
         const presetResults = registry.search(keyword);
@@ -59,12 +61,16 @@ export function registerSearchLawTool(server: McpServer): void {
 
         return { content: [{ type: "text" as const, text: lines.join("\n") }] };
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text" as const, text: `エラー: ${message}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `エラー: ${sanitizeErrorMessage(error)}`,
+            },
+          ],
           isError: true,
         };
       }
-    },
+    }),
   );
 }
