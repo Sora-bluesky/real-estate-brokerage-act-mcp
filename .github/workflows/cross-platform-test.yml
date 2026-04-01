@@ -52,6 +52,28 @@ jobs:
           node -e "const c=require('child_process').spawn('node',['dist/index.js']);setTimeout(()=>{c.kill();process.exit(0)},5000)" 2>&1 || true
           echo "Server startup OK"
 
+      - name: Verify MCP version matches package.json
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          node -e "
+            const {spawn}=require('child_process');
+            const p=spawn('node',['dist/index.js'],{stdio:['pipe','pipe','ignore']});
+            let out='';
+            p.stdout.on('data',d=>{
+              out+=d;
+              try{
+                const msg=JSON.parse(out);
+                if(msg.result&&msg.result.serverInfo){
+                  const v=msg.result.serverInfo.version;
+                  if(v==='$PKG_VERSION'){console.log('Version match OK: '+v);p.kill();process.exit(0)}
+                  else{console.error('Version mismatch: MCP='+v+' pkg=$PKG_VERSION');p.kill();process.exit(1)}
+                }
+              }catch{}
+            });
+            p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'ci-test',version:'1.0.0'}}})+'\n');
+            setTimeout(()=>{console.error('Timeout');p.kill();process.exit(1)},10000);
+          "
+
       - name: MCP protocol test
         run: |
           node -e "
