@@ -11,6 +11,7 @@ const registry = new TsutatsuRegistry();
 const schema = {
   tsutatsu_name: z
     .string()
+    .max(200)
     .describe(
       "通達・ガイドライン・告示名（例: 報酬額告示、原状回復ガイドライン、解釈・運用の考え方）",
     ),
