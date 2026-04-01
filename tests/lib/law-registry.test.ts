@@ -167,5 +167,22 @@ describe("LawRegistry", () => {
       const results = registry.getByGroup("税法");
       expect(results).toHaveLength(6);
     });
+
+    it("finds Phase 3 aliases by abbreviation", () => {
+      expect(registry.findByName("暴対法")).toBeDefined();
+      expect(registry.findByName("個人情報保護法")).toBeDefined();
+      expect(registry.findByName("地価公示法")).toBeDefined();
+      expect(registry.findByName("住宅金融支援機構法")).toBeDefined();
+      expect(registry.findByName("不動産鑑定評価法")).toBeDefined();
+      expect(registry.findByName("信託法")).toBeDefined();
+      expect(registry.findByName("信託業法")).toBeDefined();
+      expect(registry.findByName("不特法")).toBeDefined();
+      expect(registry.findByName("住生活基本法")).toBeDefined();
+    });
+
+    it("contains 85 aliases total", () => {
+      const all = registry.getAll();
+      expect(all).toHaveLength(85);
+    });
   });
 });
