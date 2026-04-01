@@ -1,3 +1,6 @@
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerGetLawTool } from "./tools/get-law.js";
 import { registerGetFullLawTool } from "./tools/get-full-law.js";
@@ -12,7 +15,13 @@ import { registerAnalyzeArticleTool } from "./tools/analyze-article.js";
 import { registerGetMetricsTool } from "./tools/get-metrics.js";
 
 const SERVER_NAME = "real-estate-brokerage-act-mcp";
-const SERVER_VERSION = "0.1.0";
+
+// Single source of truth: read version from package.json
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(
+  readFileSync(join(__dirname, "..", "package.json"), "utf-8"),
+);
+const SERVER_VERSION: string = pkg.version;
 
 const INSTRUCTIONS = `あなたは不動産取引の法規照合アシスタントです。
 
