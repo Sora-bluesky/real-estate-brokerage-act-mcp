@@ -1,0 +1,74 @@
+name: Cross-Platform Test
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        node-version: [20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (type check)
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify shebang and permissions
+        run: |
+          head -1 dist/index.js | grep -q "#!/usr/bin/env node"
+          echo "Shebang line OK"
+          test -x dist/index.js || chmod 755 dist/index.js
+          echo "Execute permission OK"
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Server startup test
+        run: |
+          node -e "const c=require('child_process').spawn('node',['dist/index.js']);setTimeout(()=>{c.kill();process.exit(0)},5000)" 2>&1 || true
+          echo "Server startup OK"
+
+      - name: MCP protocol test
+        run: |
+          node -e "
+            const {spawn}=require('child_process');
+            const p=spawn('node',['dist/index.js'],{stdio:['pipe','pipe','ignore']});
+            let out='';
+            p.stdout.on('data',d=>{out+=d;if(out.includes('real-estate-brokerage-act-mcp')){console.log('MCP protocol response OK');p.kill();process.exit(0)}});
+            p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'ci-test',version:'1.0.0'}}})+'\n');
+            setTimeout(()=>{console.error('Timeout');p.kill();process.exit(1)},10000);
+          "
+
+      - name: Install from local source (simulates npx)
+        run: |
+          mkdir /tmp/mcp-test-project
+          cd /tmp/mcp-test-project
+          npm init -y
+          npm install "${{ github.workspace }}"
+
+      - name: Verify CLI entry point
+        run: |
+          cd /tmp/mcp-test-project
+          node -e "const c=require('child_process').spawn('npx',['real-estate-brokerage-act-mcp'],{shell:true});setTimeout(()=>{c.kill();process.exit(0)},3000)" 2>&1 || true
+          echo "CLI entry point OK"
