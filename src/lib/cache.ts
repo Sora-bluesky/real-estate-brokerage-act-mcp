@@ -20,6 +20,8 @@ interface CacheEntry<T> {
   expires_at: number;
 }
 
+const MAX_CACHE_ENTRIES = 1000;
+
 /**
  * In-memory TTL cache. Entries expire after a configurable duration.
  */
@@ -45,6 +47,13 @@ export class TTLCache<T> implements ICache<T> {
 
   set(key: string, value: T, ttl_ms?: number): void {
     const ttl = ttl_ms ?? this.default_ttl_ms;
+    // Evict oldest entry if cache is at capacity
+    if (this.store.size >= MAX_CACHE_ENTRIES && !this.store.has(key)) {
+      const oldestKey = this.store.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.store.delete(oldestKey);
+      }
+    }
     this.store.set(key, {
       value,
       expires_at: Date.now() + ttl,

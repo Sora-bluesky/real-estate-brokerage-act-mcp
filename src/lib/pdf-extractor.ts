@@ -25,6 +25,24 @@ if (typeof globalThis.DOMMatrix === "undefined") {
   };
 }
 
+const ALLOWED_PDF_DOMAINS = [
+  "www.mlit.go.jp",
+  "mlit.go.jp",
+  "laws.e-gov.go.jp",
+];
+
+function isAllowedPdfUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return ALLOWED_PDF_DOMAINS.some(
+      (domain) =>
+        parsed.hostname === domain || parsed.hostname.endsWith("." + domain),
+    );
+  } catch {
+    return false;
+  }
+}
+
 const PDF_TEXT_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 const REQUEST_TIMEOUT = 30_000; // 30 seconds
 const PDF_USER_AGENT =
@@ -87,6 +105,12 @@ function normalizeText(raw: string): string {
  * @throws Error if the PDF cannot be fetched or parsed
  */
 export async function extractTextFromPdf(pdfUrl: string): Promise<string> {
+  if (!isAllowedPdfUrl(pdfUrl)) {
+    throw new Error(
+      `PDF URL is not in the allowed domain list: ${new URL(pdfUrl).hostname}`,
+    );
+  }
+
   const cacheKey = `pdf:${pdfUrl}`;
   const cached = pdfTextCache.get(cacheKey);
   if (cached) {
