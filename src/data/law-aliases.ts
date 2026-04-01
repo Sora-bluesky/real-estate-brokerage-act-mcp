@@ -60,6 +60,16 @@ export const ALL_LAW_ALIASES: LawAlias[] = [
     abbrev: ["不登令"],
     group: "契約・民事",
   },
+  {
+    title: "信託法",
+    abbrev: ["信託法"],
+    group: "契約・民事",
+  },
+  {
+    title: "信託業法",
+    abbrev: ["信託業法"],
+    group: "契約・民事",
+  },
 
   // ── Jusetsu / Statutory restrictions (City planning) ──
   {
@@ -270,6 +280,16 @@ export const ALL_LAW_ALIASES: LawAlias[] = [
     abbrev: ["土壌汚染対策法"],
     group: "重説・法令上の制限（農地・土地）",
   },
+  {
+    title: "地価公示法",
+    abbrev: ["地価公示法"],
+    group: "重説・法令上の制限（農地・土地）",
+  },
+  {
+    title: "不動産の鑑定評価に関する法律",
+    abbrev: ["不動産鑑定評価法"],
+    group: "重説・法令上の制限（農地・土地）",
+  },
 
   // ── Jusetsu / Statutory restrictions (Roads / Transportation) ──
   {
@@ -368,6 +388,16 @@ export const ALL_LAW_ALIASES: LawAlias[] = [
     abbrev: ["住宅瑕疵担保履行法"],
     group: "住宅品質・瑕疵",
   },
+  {
+    title: "独立行政法人住宅金融支援機構法",
+    abbrev: ["住宅金融支援機構法"],
+    group: "住宅品質・瑕疵",
+  },
+  {
+    title: "住生活基本法",
+    abbrev: ["住生活基本法"],
+    group: "住宅品質・瑕疵",
+  },
 
   // ── Rental property management ──
   {
@@ -390,6 +420,21 @@ export const ALL_LAW_ALIASES: LawAlias[] = [
   {
     title: "不当景品類及び不当表示防止法",
     abbrev: ["景品表示法", "景表法"],
+    group: "コンプライアンス",
+  },
+  {
+    title: "暴力団員による不当な行為の防止等に関する法律",
+    abbrev: ["暴対法", "暴力団対策法"],
+    group: "コンプライアンス",
+  },
+  {
+    title: "個人情報の保護に関する法律",
+    abbrev: ["個人情報保護法"],
+    group: "コンプライアンス",
+  },
+  {
+    title: "不動産特定共同事業法",
+    abbrev: ["不特法", "不動産特定共同事業法"],
     group: "コンプライアンス",
   },
 
