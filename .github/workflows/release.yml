@@ -4,6 +4,8 @@ on:
   push:
     tags: ["v*"]
 
+# Publishing uses npm trusted publishing (OIDC), so no npm token is needed.
+# contents: write is for the GitHub Release step.
 permissions:
   contents: write
   id-token: write
@@ -26,11 +28,21 @@ jobs:
           fi
           echo "Version match OK"
 
+      # Trusted publishing needs npm CLI >= 11.5.1 and Node >= 22.14.0.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
+
+      - name: Verify npm supports trusted publishing
+        run: |
+          NPM_VERSION=$(npm --version)
+          echo "npm $NPM_VERSION"
+          if ! node -e 'const [a,b,c]=process.argv[1].split(".").map(Number);process.exit(a>11||(a===11&&(b>5||(b===5&&c>=1)))?0:1)' "$NPM_VERSION"; then
+            echo "::error::npm $NPM_VERSION is older than 11.5.1, which trusted publishing requires"
+            exit 1
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -41,10 +53,19 @@ jobs:
       - name: Run tests
         run: npm test
 
+      # Skip only when this exact version is already on the registry (e.g. a
+      # re-run after the publish step succeeded). Any other publish error
+      # fails the job. Provenance is generated automatically by trusted
+      # publishing, so --provenance is not needed.
       - name: Publish to npm
-        run: npm publish --provenance || echo "Already published, skipping."
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$(npm view "$NAME@$VERSION" version 2>/dev/null)" = "$VERSION" ]; then
+            echo "$NAME@$VERSION is already published, skipping."
+          else
+            npm publish
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
